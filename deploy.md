@@ -39,6 +39,8 @@ printf '%s' 'NEW_GEMINI_API_KEY' | gcloud secrets versions add gemini-api-key --
 
 The backend reads the latest version when it first needs Gemini after restart.
 
+The Cloud Run service account needs only `roles/secretmanager.secretAccessor` on this secret. Keep the secret out of Docker build arguments, source files, frontend `VITE_` variables, and Git. The included `backend/.dockerignore` excludes local `.env` files from the image build context.
+
 ## Frontend
 
 Set `VITE_API_URL` to the deployed Cloud Run URL and set the Firebase `VITE_` values, then build:

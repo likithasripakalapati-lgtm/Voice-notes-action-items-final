@@ -2,6 +2,16 @@
 
 A beginner-friendly React and Express app that turns typed or spoken notes into summaries and action items with Gemini, then saves them privately in Cloud Firestore.
 
+## Included Features
+
+- Firebase email/password sign up, login, and logout
+- Browser speech recognition with a manual text fallback
+- Server-side Gemini analysis with validated structured JSON
+- Summaries, topics, priorities, and explicitly mentioned due dates
+- Private Firestore note history with completion and deletion controls
+- Dashboard totals and AI Focus Insights
+- Cloud Run-compatible Express backend with Secret Manager support
+
 ## Requirements
 
 - Node.js 20+
@@ -27,7 +37,7 @@ The frontend runs at `http://localhost:5173` and the API at `http://localhost:30
 
 Gemini credentials are read only by the backend. In production, the backend reads the latest version of the Secret Manager secret named by `GEMINI_SECRET_NAME` using Google Cloud Application Default Credentials. Vite variables are public client configuration, not secrets. Firestore rules require an authenticated user and match the requested user ID to the authenticated UID. Never commit `.env` files or API keys.
 
-For local development, set `GEMINI_API_KEY` in `backend/.env`. For Cloud Run, leave that value out and configure Secret Manager as described in [deploy.md](deploy.md).
+For local development, set `GEMINI_API_KEY` in `backend/.env`. For Cloud Run, leave that value out and configure Secret Manager as described in [deploy.md](deploy.md). The backend `.dockerignore` also excludes local environment files from container build contexts.
 
 ## Checks
 
