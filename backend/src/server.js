@@ -2,10 +2,30 @@ import 'dotenv/config';
 import cors from 'cors';
 import express from 'express';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { SecretManagerServiceClient } from '@google-cloud/secret-manager';
 
 const app = express();
 const port = Number(process.env.PORT) || 3001;
 const allowedPriorities = new Set(['low', 'medium', 'high']);
+let geminiApiKey = process.env.GEMINI_API_KEY;
+
+async function loadGeminiApiKey() {
+  if (geminiApiKey) return geminiApiKey;
+
+  const secretName = process.env.GEMINI_SECRET_NAME;
+  const projectId = process.env.GOOGLE_CLOUD_PROJECT || process.env.GCLOUD_PROJECT;
+  if (!secretName || !projectId) return undefined;
+
+  const client = new SecretManagerServiceClient();
+  const [version] = await client.accessSecretVersion({
+    name: `projects/${projectId}/secrets/${secretName}/versions/latest`
+  });
+  const secret = version.payload?.data;
+  if (!secret) throw new Error('The configured Gemini Secret Manager secret is empty.');
+
+  geminiApiKey = Buffer.from(secret).toString('utf8').trim();
+  return geminiApiKey;
+}
 
 app.use(cors());
 app.use(express.json({ limit: '32kb' }));
@@ -41,10 +61,12 @@ function validateAnalysis(value) {
 app.post('/api/analyze', async (request, response) => {
   const text = typeof request.body?.text === 'string' ? request.body.text.trim() : '';
   if (!text) return response.status(400).json({ error: 'Note text is required.' });
-  if (!process.env.GEMINI_API_KEY) return response.status(503).json({ error: 'Gemini is not configured on the server.' });
 
   try {
-    const client = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    const apiKey = await loadGeminiApiKey();
+    if (!apiKey) return response.status(503).json({ error: 'Gemini is not configured on the server.' });
+
+    const client = new GoogleGenerativeAI(apiKey);
     const model = client.getGenerativeModel({ model: 'gemini-3.6-flash' });
     const result = await model.generateContent(`Analyze this note and return JSON only. Use exactly this shape: {"summary":"string","actionItems":[{"task":"string","priority":"low|medium|high","dueDate":"YYYY-MM-DD or null","completed":false}],"topics":["string"]}. Never invent due dates; only include one when explicitly mentioned. Keep the summary short. Note:\n${text}`);
     const raw = result.response.text().replace(/^```json\s*|\s*```$/g, '').trim();

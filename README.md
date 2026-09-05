@@ -10,7 +10,7 @@ A beginner-friendly React and Express app that turns typed or spoken notes into 
 
 ## Setup
 
-1. Copy `backend/.env.example` to `backend/.env` and add your Gemini key.
+1. Copy `backend/.env.example` to `backend/.env` and add your Gemini key for local development. Never put this file in Git.
 2. Copy `frontend/.env.example` to `frontend/.env` and add the Firebase web app values from Firebase Console.
 3. Install dependencies from the project root:
 
@@ -25,7 +25,9 @@ The frontend runs at `http://localhost:5173` and the API at `http://localhost:30
 
 ## Security
 
-Gemini credentials are read only by the backend. Vite variables are public client configuration, not secrets. Firestore rules require an authenticated user and match the requested user ID to the authenticated UID. Never commit `.env` files.
+Gemini credentials are read only by the backend. In production, the backend reads the latest version of the Secret Manager secret named by `GEMINI_SECRET_NAME` using Google Cloud Application Default Credentials. Vite variables are public client configuration, not secrets. Firestore rules require an authenticated user and match the requested user ID to the authenticated UID. Never commit `.env` files or API keys.
+
+For local development, set `GEMINI_API_KEY` in `backend/.env`. For Cloud Run, leave that value out and configure Secret Manager as described in [deploy.md](deploy.md).
 
 ## Checks
 
